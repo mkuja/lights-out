@@ -1,0 +1,69 @@
+{% extends 'about/base.html' %}
+
+{% block content %}
+
+    <div>
+        <h1>Lights out -Discord bot</h1>
+        <hr>
+        <h2>Project purpose</h2>
+        <p>Purpose of the project is, of course, to mess around with the lights in your home. Please register, and
+            have our Discord -bot on your server to watch for mentions of registered people. It will play cool
+            light-effects in your home whenever someone mentions you. Of course, you can also have the bot also ignore
+            people who think they can make a disco of your house.</p>
+        <p>At the moment only LIFX -brand lights work.</p>
+    </div>
+    <div>
+        <h2>How to get stuff working</h2>
+        <p>First you need to buy some LIFX-brand color lights. Register to LIFX and install the lights as per
+            provided instruction. Almost lastly, get your LIFX developer token from
+            <a href="https://cloud.lifx.com">https://cloud.lifx.com</a>. Then register to Lights out -website, provide
+            your Discord-tag and paste your developer token to the app in "Edit yourself" -menu.
+        </p>
+    </div>
+    <div>
+        <h2>How to get Lights out -bot on to your server</h2>
+        <p>TODO: write</p>
+    </div>
+    <div>
+        <h2>Bot commands</h2>
+        <p>
+            Bot commands are as follows.
+        <ul class="bot-commands">
+            <li>
+                <strong>$enable</strong>
+                <span>Enables light effects on the server for you.</span>
+            </li>
+            <li>
+                <strong>$enable_global</strong>
+                <span>Enables light effects on every server you share for you</span>
+            </li>
+            <li>
+                <strong>$disable</strong>
+                <span>Disables light effects on the server for you.</span>
+            </li>
+            <li>
+                <strong>$disable_global</strong>
+                <span>Disables light effects globally for you.</span>
+            </li>
+            <li>
+                <strong>$ignore_from user</strong>
+                <span>Disables light effects from mentions made by user.</span>
+            </li>
+            <li>
+                <strong>$ignore_channel channel</strong>
+                <span>Ignores mentions on channel. The command must be given on the server the channel is on.</span>
+            </li>
+            <li>
+                <strong>$unignore_channel channel</strong>
+                <span>Unignores channel. The command must be given on the server the channel is on.</span>
+            </li>
+            <li>
+                <strong>$my_channels</strong>
+                <span>Shows your shared, ignored and enabled channels.</span>
+            </li>
+        </ul>
+        Disabling the bot globally is essentially same as ignoring every channel on every server you share. To allow
+        effects from just some channels you can disable it globally and then unignore wanted channels.
+        </p>
+    </div>
+{% endblock %}

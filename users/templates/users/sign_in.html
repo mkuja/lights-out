@@ -1,0 +1,13 @@
+{% extends 'users/base.html' %}
+
+{% block content %}
+<h2>Log in</h2>
+    {% if error %}
+    <div style="color:red;"><p>{{ error }}</p></div>
+    {% endif %}
+<form action="{% url 'sign_in_user' %}" method="post">
+    {% csrf_token %}
+    {{ form.as_table }}
+    <button type="submit">Log in</button>
+</form>
+{% endblock %}

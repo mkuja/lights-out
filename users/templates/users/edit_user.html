@@ -1,0 +1,47 @@
+{% extends 'users/base.html' %}
+
+{% block content %}
+    {% if error %}
+        <div style="border:double;">
+            <div style="color:red;">{{ error }}</div>
+        </div>
+    {% endif %}
+    {% if saved %}
+        <div style="border:double;">
+            <div style="color:blue;">
+                Changes saved.
+            </div>
+        </div>
+    {% endif %}
+    <form action="{% url 'edit_user' %}" method="post">
+        {% csrf_token %}
+        <div>
+            <div><label for="username">Username: <strong>{{ username }}</strong></label></div>
+            <div style="margin-top: 0.5rem;">
+                <div><label for="current_password"><strong>Current password:</strong></label></div>
+                <div><input type="password" name="current_password"></div>
+            </div>
+            <div style="margin-top: 0.5rem;">
+                <div><label for="password1">New password:</label></div>
+                <div><input type="password" name="password1"></div>
+            </div>
+            <div style="margin-top: 0.5rem;">
+                <div><label for="password2">Confirm new pw:</label></div>
+                <div><input type="password" name="password2"></div>
+            </div>
+            <div style="margin-top: 0.5rem;">
+                <div><label for="discord_tag">Discord tag:</label></div>
+                <div><input type="text" name="discord_tag" value="{{ discord_tag }}"></div>
+            </div>
+            <div style="margin-top: 0.5rem;">
+                <div><label for="lifx_dev_token">LIFX token</label></div>
+                <div><input type="text" name="lifx_dev_token" value="{{ lifx_dev_token }}"></div>
+            </div>
+        </div>
+        <div style="margin-top: 1rem;">
+            <button type="submit">Submit</button>
+        </div>
+    </form>
+    <hr>
+    <p>Current password is mandatory.</p>
+{% endblock %}

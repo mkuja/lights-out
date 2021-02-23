@@ -1,0 +1,110 @@
+html {
+  font-family: 'Noto Sans JP', sans-serif;
+}
+
+.container {
+  min-width: 355px;
+  max-width: 1400px;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 2rem;
+  background-color: bisque;
+  border: 1px solid black;
+}
+
+hr {
+  margin-top: 1.5rem;
+  overflow: visible; /* For IE */
+  height: 30px;
+  border-style: solid;
+  border-color: black;
+  border-width: 1px 0 0 0;
+  border-radius: 5px;
+}
+
+hr:before { /* Not really supposed to work, but does */
+  margin-bottom: 1.5rem;
+  display: block;
+  content: "";
+  height: 30px;
+  margin-top: -31px;
+  border-style: solid;
+  border-color: black;
+  border-width: 0 0 1px 0;
+  border-radius: 5px;
+}
+
+input {
+  padding: 5px;
+  border-radius: 5px;
+}
+
+button {
+  padding: 5px;
+  border-radius: 5px;
+  font-weight: bold;
+}
+
+.delete-bulb {
+  background-color: lightcoral;
+}
+
+.save-and-test {
+  background-color: cyan;
+}
+
+span {
+  display: inline-block;
+  margin-top: 0.3rem;
+  padding-left: 1rem;
+  font-style: italic;
+}
+ul.bot-commands {
+  list-style-type: disc;
+}
+
+.nav-bar {
+  display: flex;
+  flex-wrap: nowrap;
+  list-style: none;
+  margin-top: 3rem;
+  text-align: center;
+}
+
+.nav-item {
+  margin-top: 1rem;
+  margin-bottom: 2rem;
+  margin-left: 0.5rem;
+  margin-right: 1rem;
+  font-family: 'Akaya Telivigala', cursive;
+  font-size: 2.5rem;
+  border-bottom-style: dotted;
+  border-top-style: dotted;
+}
+
+.username {
+  font-family: 'Stick', sans-serif;
+  font-size: 2.8rem;
+  margin-left: 1.5rem;
+  transform: rotate(-10deg);
+}
+.username-label {
+  font-family: 'Stick', sans-serif;
+  font-size: 1.5rem;
+  margin-left: 3rem;
+  transform: rotate(-10deg);
+}
+
+a.active {
+  border-top-color: red;
+  border-bottom-color: red;
+}
+
+.nav-item a:visited {
+  text-decoration: none;
+}
+
+.nav-link {
+  color: black;
+  text-decoration: none;
+}
