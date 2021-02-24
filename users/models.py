@@ -8,5 +8,3 @@ class MyUser(User):
     lifx_access_token = models.CharField(max_length=100, blank=True)
     lifx_refresh_token = models.CharField(max_length=100, blank=True)
     lifx_lights_list = models.JSONField(blank=True, default=dict)
-
-
