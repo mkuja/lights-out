@@ -33,11 +33,13 @@ def sign_up_user(request):
 def sign_in_user(request):
     user = authenticate(username=request.POST.get("username"),
                         password=request.POST.get("password"))
+    # Signing in
     if request.method == "POST":
+        # User authenticated
         if user:
             login(request, user)
             return render(request, "users/signed_in.html", {
-                "user": user.get_username(),
+                "username": user.get_username(),
                 "authenticated": user.is_authenticated,
                 "active_page": "sign_in"})
         else:

@@ -1,22 +1,27 @@
 import pathlib
 import os
 import discord
+from typing import List
 from discord.ext import commands
+from asgiref.sync import sync_to_async
 from dotenv import load_dotenv
 import requests
 import json
 import django
 django.setup()
-from users.models import MyUser
 from lights.models import LIFXLight
-from asgiref.sync import sync_to_async
+from users.models import MyUser
+from discord_bot.models import Guild
 
 
-dotenv_path = pathlib.Path("..")
+# TODO: Make bot ignore private mentions.
+# TODO: Make discord-tag unique in database.
+
+
 load_dotenv()
 
 
-client = commands.Bot(command_prefix="$")
+client = commands.Bot(command_prefix=".")
 
 
 @client.event
@@ -24,24 +29,137 @@ async def on_ready():
     print("Bot is ready.")
 
 
+# TODO: Test behavior when lights are not powered.
 @client.event
 async def on_message(message: discord.Message):
     if message.mentions:
         for discord_user in message.mentions:
+            # If user is in DB he is registered => Do effects on bulbs.
             try:
-                user_from_db = await sync_to_async(MyUser.objects.get)(
+                user_from_db: MyUser = await sync_to_async(MyUser.objects.get)(
                     discord_tag=str(discord_user)
                 )
-                discord_bulbs = await sync_to_async(get_discord_bulbs)(
-                    user_from_db
-                )
-                for bulb in discord_bulbs:
-                    await do_effects(bulb, user_from_db)
-            except MyUser.DoesNotExist as e:
+                # Check that user has this guild enabled.
+                users_guilds: List[Guild] = await sync_to_async(list)(
+                    user_from_db.enabled_discord_guilds.all())
+
+                # It is registered user's mention. See if the guild is enabled.
+                async for guild in list_muncher(users_guilds):
+                    if guild.guild_id == str(message.guild.id):
+                        discord_bulbs = await sync_to_async(get_discord_bulbs)(
+                            user_from_db)
+                        for bulb in discord_bulbs:
+                            await do_effects(bulb, user_from_db)
+            # Mentioned user isn't registered.
+            except MyUser.DoesNotExist as _:
                 continue
+            except Guild.DoesNotExist as _:
+                continue
+    await client.process_commands(message)
+
+
+@client.command(name="guilds")
+async def guilds(ctx):
+    """Command to get list of active guilds."""
+
+    try:
+        db_user = await sync_to_async(MyUser.objects.get)(
+            discord_tag=str(ctx.author))
+    except MyUser.DoesNotExist as _:
+        ctx.send("You have to register first.")
+        return
+    user_guilds = await sync_to_async(list)(
+        db_user.enabled_discord_guilds.all())
+    msg = f"""{', '.join(
+        [x.guild_name async for x in list_muncher(user_guilds)])}"""
+    msg = "Guilds you've enabled: " + msg if msg else "No enabled guilds."
+    await ctx.send(msg)
+
+
+async def list_muncher(lst: list):
+    """Helper function to consume lists in async-for."""
+
+    lst2 = lst.copy()
+    while lst2:
+        yield lst2.pop(0)
+
+
+# TODO: Test with unregistered user.
+@client.command(name="enable")
+async def enable(ctx):
+    guild = ctx.guild
+    author = ctx.author
+    # Check if guild exists.
+    try:
+        db_guild = await sync_to_async(Guild.objects.get)(
+            guild_id=str(guild.id)
+        )
+    # If it doesn't, create it.
+    except Guild.DoesNotExist as _:
+        db_guild = await sync_to_async(Guild.objects.create)(
+            guild_id=str(guild.id),
+            guild_name=guild.name
+        )
+        db_guild.save()
+    # Check that message author is registered (their tag is in database).
+    try:
+        db_author = await sync_to_async(MyUser.objects.get)(
+            discord_tag=str(author)
+        )
+        # Succeeds fine if author already has enabled this guild.
+        try:
+            _ = await sync_to_async(db_author.enabled_discord_guilds.get)(
+                guild_id=str(guild.id)
+            )
+            await ctx.send("Already enabled.")
+            return
+        except Guild.DoesNotExist as _:
+            await sync_to_async(db_author.enabled_discord_guilds.add)(db_guild)
+            await ctx.send(f"Done. You have enabled effects on {guild.name}.")
+            return
+    except MyUser.DoesNotExist as _:
+        await ctx.send("You have not registered.")
+        return
+
+
+@client.command(name="disable")
+async def disable(ctx):
+    guild = ctx.guild
+    author = ctx.author
+    # First try if guild is in DB. (Someone has or has had it enabled.)
+    try:
+        db_guild = await sync_to_async(Guild.objects.get)(guild_id=guild.id)
+    except Guild.DoesNotExist as e:
+        await ctx.send(
+            "You hadn't this guild enabled to begin with. In fact, no one has."
+        )
+        return
+    # If user is in DB, disable notifications for this guild.
+    try:
+        db_author = await sync_to_async(MyUser.objects.get)(
+            discord_tag=str(author)
+        )
+        # OK, so user is in DB, since no exception. Check whether the guild
+        # is enabled or disabled.
+        try:
+            await sync_to_async(db_author.enabled_discord_guilds.get)(
+                guild_id=str(guild.id))
+            # No exception, so user has the guild enabled. Disable it.
+            await sync_to_async(db_author.enabled_discord_guilds.remove)(
+                db_guild)
+            await ctx.send(
+                f"Done. You have disabled light notifications on {guild.name}."
+            )
+        except Guild.DoesNotExist as _:
+            await ctx.send(
+                f"You already have notifications on {guild.name} disabled.")
+    except MyUser.DoesNotExist as e:
+        await ctx.send(f"You have to register first to do anything.")
 
 
 async def do_effects(bulb: LIFXLight, user: MyUser):
+    """Do light effects on given bulb."""
+
     effect = bulb.effect
     color = bulb.effect_color
     effects_settings = {
@@ -56,6 +174,8 @@ async def do_effects(bulb: LIFXLight, user: MyUser):
 
 
 def get_discord_bulbs(user: MyUser):
+    """Get discord-enabled bulbs of user."""
+
     ret = []
     for bulb in user.lifxlight_set.all():
         if bulb.discord_enabled:
