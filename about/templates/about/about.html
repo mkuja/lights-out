@@ -3,7 +3,7 @@
 {% block content %}
 
     <div>
-        <h1>Lights out -Discord bot</h1>
+        <h1>LightsOut -Discord bot</h1>
         <hr>
         <h2>Project purpose</h2>
         <p>Purpose of the project is, of course, to mess around with the lights in your home. Please register, and
@@ -21,7 +21,7 @@
         </p>
     </div>
     <div>
-        <h2>How to get Lights out -bot on to your server</h2>
+        <h2>How to get LightsOut -bot on to your server</h2>
         <p>TODO: write</p>
     </div>
     <div>
@@ -38,16 +38,24 @@
                 <span>Disables light effects on the server for you.</span>
             </li>
             <li>
-                <strong>$ignore_from user</strong>
+                <strong>$ignore user</strong>
                 <span>Disables light effects from mentions made by user.</span>
             </li>
             <li>
+                <strong>$unignore user</strong>
+                <span>Re-enables light effects from mentions made by user.</span>
+            </li>
+            <li>
+                <strong>$ignore_list</strong>
+                <span>Gives list of your ignored Discord users.</span>
+            </li>
+            <li>
                 <strong>$guilds</strong>
-                <span>Shows your shared, disabled and enabled guilds.</span>
+                <span>Shows your enabled guilds (aka servers).</span>
             </li>
         </ul>
-        Disabling the bot globally is essentially same as ignoring every channel on every server you share. To allow
-        effects from just some channels you can disable it globally and then unignore wanted channels.
+        Bot is disabled for each user on a guild by default (even if they're registered) and user has to enable it
+        first.
         </p>
     </div>
 {% endblock %}

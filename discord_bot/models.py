@@ -1,5 +1,6 @@
 
 from django.db import models
+from django.contrib import admin
 from django.contrib.postgres.fields import ArrayField
 
 
@@ -11,3 +12,6 @@ class Guild(models.Model):
 
     class Meta:
         app_label = "users"
+
+
+admin.register(Guild)

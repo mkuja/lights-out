@@ -14,14 +14,10 @@ from users.models import MyUser
 from discord_bot.models import Guild
 
 
-# TODO: Make bot ignore private mentions.
-# TODO: Make discord-tag unique in database.
-
-
 load_dotenv()
 
 
-client = commands.Bot(command_prefix=".")
+client = commands.Bot(command_prefix="$")
 
 
 @client.event
@@ -41,7 +37,7 @@ async def on_message(message: discord.Message):
                 )
                 # Check that user has this guild enabled.
                 users_guilds: List[Guild] = await sync_to_async(list)(
-                    user_from_db.enabled_discord_guilds.all())
+                    user_from_db.discord_enabled_guilds.all())
 
                 # It is registered user's mention. See if the guild is enabled.
                 async for guild in list_muncher(users_guilds):
@@ -69,11 +65,90 @@ async def guilds(ctx):
         ctx.send("You have to register first.")
         return
     user_guilds = await sync_to_async(list)(
-        db_user.enabled_discord_guilds.all())
+        db_user.discord_enabled_guilds.all())
     msg = f"""{', '.join(
         [x.guild_name async for x in list_muncher(user_guilds)])}"""
     msg = "Guilds you've enabled: " + msg if msg else "No enabled guilds."
     await ctx.send(msg)
+
+
+@client.command(name="ignore")
+async def ignore(ctx, person: discord.Member = None):
+    """Ignore a person."""
+
+    if not person:
+        await ctx.send("Person to be ignored needed as an argument.")
+        return
+
+    try:
+        db_user: MyUser = await sync_to_async(
+            MyUser.objects.get)(discord_tag=str(ctx.author))
+    except MyUser.DoesNotExist as _:
+        await ctx.send("You need to register first.")
+        return
+
+    ignored: List[str] = await sync_to_async(list)(
+        db_user.discord_ignored_users)
+
+    async for ignored_person in list_muncher(ignored):
+        if str(person) == ignored_person:
+            await ctx.send(f"You're already ignoring {str(person)}.")
+            return
+    else:
+        await sync_to_async(db_user.discord_ignored_users.append)(str(person))
+        await sync_to_async(db_user.save)()
+        await ctx.send(
+            f"Now ignoring light notifications from {str(person)}.")
+
+
+@client.command(name="unignore")
+async def unignore(ctx, person: discord.Member = None):
+    """Unignore a person."""
+
+    if not person:
+        await ctx.send("Person to be unignored needed as an argument.")
+        return
+
+    try:
+        db_user: MyUser = await sync_to_async(
+            MyUser.objects.get)(discord_tag=str(ctx.author))
+    except MyUser.DoesNotExist as _:
+        await ctx.send("You're not even registered. You don't have ignores.")
+        return
+
+    ignored: List[str] = await sync_to_async(list)(
+        db_user.discord_ignored_users)
+
+    async for ignored_person in list_muncher(ignored):
+        if str(person) == ignored_person:
+            await sync_to_async(
+                db_user.discord_ignored_users.remove)(ignored_person)
+            await sync_to_async(db_user.save)()
+            await ctx.send(f"Unignored {ignored_person} for you.")
+            return
+    await ctx.send(f"You haven't ignored {person}.")
+
+
+# TODO: What if ignored person changes their tag? Should ID be used instead?
+@client.command(name="ignore_list")
+async def ignore_list(ctx):
+    """Give ctx.author's ignore list."""
+
+    try:
+        db_user: MyUser = await sync_to_async(
+            MyUser.objects.get)(discord_tag=str(ctx.author))
+    except MyUser.DoesNotExist:
+        await ctx.send(f"You're not registered.")
+
+    msg = "Ignored Discord users: "
+    async for ignored_tag in list_muncher(
+            await sync_to_async(list)(db_user.discord_ignored_users)):
+        msg += f"{ignored_tag}, "
+    # If user has no ignores.
+    if msg == "Ignored Discord users: ":
+        await ctx.send("No ignores.")
+    else:
+        await ctx.send(msg[:-2])
 
 
 async def list_muncher(lst: list):
@@ -108,13 +183,13 @@ async def enable(ctx):
         )
         # Succeeds fine if author already has enabled this guild.
         try:
-            _ = await sync_to_async(db_author.enabled_discord_guilds.get)(
+            _ = await sync_to_async(db_author.discord_enabled_guilds.get)(
                 guild_id=str(guild.id)
             )
             await ctx.send("Already enabled.")
             return
         except Guild.DoesNotExist as _:
-            await sync_to_async(db_author.enabled_discord_guilds.add)(db_guild)
+            await sync_to_async(db_author.discord_enabled_guilds.add)(db_guild)
             await ctx.send(f"Done. You have enabled effects on {guild.name}.")
             return
     except MyUser.DoesNotExist as _:
@@ -142,10 +217,10 @@ async def disable(ctx):
         # OK, so user is in DB, since no exception. Check whether the guild
         # is enabled or disabled.
         try:
-            await sync_to_async(db_author.enabled_discord_guilds.get)(
+            await sync_to_async(db_author.discord_enabled_guilds.get)(
                 guild_id=str(guild.id))
             # No exception, so user has the guild enabled. Disable it.
-            await sync_to_async(db_author.enabled_discord_guilds.remove)(
+            await sync_to_async(db_author.discord_enabled_guilds.remove)(
                 db_guild)
             await ctx.send(
                 f"Done. You have disabled light notifications on {guild.name}."
