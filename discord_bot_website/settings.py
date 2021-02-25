@@ -23,8 +23,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-# TODO: When deploying, change the key and move it to .env
-SECRET_KEY = '^)*_szi1sh0ivtrv%)(ledf_c=dh*cj)@$+%5w$z#lw9c=&sv!'
+# Put your secret key in .env file in project root. For example:
+# DJANGO_SECRET_KEY = "^)*_szi1sh0ivtrv%)(ledf_c=dh*cj)@$+%5w$z#lw9c=&sv!"
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -81,6 +82,10 @@ WSGI_APPLICATION = 'discord_bot_website.wsgi.application'
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 POSTGRES_USER = os.getenv("POSTGRES_USER")
 POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
+POSTGRES_HOST = os.getenv("POSTGRES_HOST")
+POSTGRES_DB_NAME = os.getenv("POSTGRES_DB_NAME")
+POSTGRES_PORT = os.getenv("POSTGRES_PORT")
+
 
 # User and password can be left out if auth is done using identd. If you
 # authenticate using login and password, put them in .env file and uncomment
@@ -88,11 +93,11 @@ POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'lights_out',
-       # 'USER': POSTGRES_USER,
-       # 'PASSWORD': POSTGRES_PASSWORD,
-        'HOST': '127.0.0.1',
-        'PORT': '5432',
+        'NAME': POSTGRES_DB_NAME,
+        'USER': POSTGRES_USER,
+        'PASSWORD': POSTGRES_PASSWORD,
+        'HOST': POSTGRES_HOST,
+        'PORT': POSTGRES_PORT,
     }
 }
 

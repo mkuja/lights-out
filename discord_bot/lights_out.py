@@ -20,38 +20,63 @@ load_dotenv()
 client = commands.Bot(command_prefix="$")
 
 
+# TODO: Handle @here and @everyone
+
+
 @client.event
 async def on_ready():
     print("Bot is ready.")
 
 
 # TODO: Test behavior when lights are not powered.
+# TODO: Break it down a bit.
 @client.event
 async def on_message(message: discord.Message):
+    """Watch all messages for mentions."""
+
+    await client.process_commands(message)
+
+    # Don't do anything else on bot-command.
+    ctx: commands.Context = await client.get_context(message)
+    if ctx.valid:
+        return
+
     if message.mentions:
         for discord_user in message.mentions:
-            # If user is in DB he is registered => Do effects on bulbs.
+            # If user is in DB he is registered => Do checks & effects.
             try:
-                user_from_db: MyUser = await sync_to_async(MyUser.objects.get)(
-                    discord_tag=str(discord_user)
-                )
+                mentioned_user_from_db: MyUser = await sync_to_async(
+                    MyUser.objects.get)(discord_tag=str(discord_user))
+
                 # Check that user has this guild enabled.
                 users_guilds: List[Guild] = await sync_to_async(list)(
-                    user_from_db.discord_enabled_guilds.all())
+                    mentioned_user_from_db.discord_enabled_guilds.all())
 
                 # It is registered user's mention. See if the guild is enabled.
                 async for guild in list_muncher(users_guilds):
                     if guild.guild_id == str(message.guild.id):
-                        discord_bulbs = await sync_to_async(get_discord_bulbs)(
-                            user_from_db)
-                        for bulb in discord_bulbs:
-                            await do_effects(bulb, user_from_db)
+
+                        # One last check, that user hasn't ignored this guy
+                        # who is doing the mention.
+                        ignored = await sync_to_async(list)(
+                            mentioned_user_from_db.discord_ignored_users)
+
+                        # List will be empty if author wasn't on the list.
+                        if not [x
+                                async for x in list_muncher(ignored)
+                                if x == str(message.author)]:
+
+                            # Get discord enabled bulbs and do effects.
+                            discord_bulbs = await sync_to_async(
+                                get_discord_bulbs)(mentioned_user_from_db)
+                            for bulb in discord_bulbs:
+                                await do_effects(bulb, mentioned_user_from_db)
+
             # Mentioned user isn't registered.
             except MyUser.DoesNotExist as _:
                 continue
             except Guild.DoesNotExist as _:
                 continue
-    await client.process_commands(message)
 
 
 @client.command(name="guilds")
