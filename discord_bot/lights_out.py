@@ -200,7 +200,7 @@ async def enable(ctx):
             guild_id=str(guild.id),
             guild_name=guild.name
         )
-        db_guild.save()
+        await sync_to_async(db_guild.save)()
     # Check that message author is registered (their tag is in database).
     try:
         db_author = await sync_to_async(MyUser.objects.get)(
