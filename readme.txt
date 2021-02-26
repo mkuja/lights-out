@@ -49,12 +49,3 @@ python manage.py createsuperuser
 If you want flashing lights and stuff, you need to set your LIFX-token on the
 website.
 
-
-DEPLOYMENT
-===========
-
-Sorry, I don't want to write too long. If you are really interested, you can
-ask Felixi#4661 on https://discord.gg/eKtHWFbrGT or google how to deploy a
-django project and how to make a systemd service, make a hole in your
-firewall, etc. I think there are many ways to go about it, and I for sure only
-know how to do it on Ubuntu/Fedora.
